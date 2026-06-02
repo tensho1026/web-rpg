@@ -46,6 +46,16 @@ export type ActionKind =
   | "loot"
   | "town";
 
+export type DbState = {
+  connected: boolean;
+  guestUserId?: string;
+  displayName?: string;
+  saveId?: string;
+  saveVersion?: number;
+  lastSavedAt?: string;
+  message?: string;
+};
+
 export type Stats = {
   maxHp: number;
   maxMp: number;
@@ -220,6 +230,7 @@ export type Quest = {
 };
 
 export type GameState = {
+  db: DbState;
   phase: Phase;
   view: GameView;
   location: string;

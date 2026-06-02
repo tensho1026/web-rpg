@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model GuestUser {
+  id          String      @id @default(cuid())
+  guestKey    String      @unique
+  displayName String
+  createdAt   DateTime    @default(now())
+  lastLoginAt DateTime    @updatedAt
+  saves       GameSave[]
+  events      GameEvent[]
+}
+
+model GameSave {
+  id          String    @id @default(cuid())
+  guestUserId String
+  slot        Int       @default(1)
+  version     Int       @default(1)
+  state       Json
+  summary     Json
+  playerName  String
+  level       Int
+  gold        Int
+  location    String
+  view        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  guestUser   GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@unique([guestUserId, slot])
+  @@index([guestUserId])
+  @@index([updatedAt])
+}
+
+model GameEvent {
+  id          String    @id @default(cuid())
+  guestUserId String
+  type        String
+  message     String
+  payload     Json?
+  createdAt   DateTime  @default(now())
+  guestUser   GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@index([guestUserId, createdAt])
+}

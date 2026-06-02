@@ -1,6 +1,7 @@
 import { RpgShell } from "@/app/components/rpg-shell";
-import { createInitialGameState } from "@/lib/game/engine";
+import { loadGameStateForPage } from "@/lib/db/game-store";
 
-export default function Home() {
-  return <RpgShell initialState={createInitialGameState()} />;
+export default async function Home() {
+  const initialState = await loadGameStateForPage();
+  return <RpgShell initialState={initialState} />;
 }

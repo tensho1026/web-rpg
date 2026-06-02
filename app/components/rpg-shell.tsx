@@ -305,6 +305,10 @@ export function RpgShell({ initialState }: { initialState: GameState }) {
             <h1>炉端の街アステル</h1>
           </div>
           <div className="resource-stack">
+            <div className={state.db.connected ? "db-chip connected" : "db-chip"}>
+              <Database size={12} />
+              <span>{state.db.connected ? state.db.displayName ?? "DB保存ON" : "ゲスト未接続"}</span>
+            </div>
             <div className="wallet" aria-label="所持金">
               <Coins size={16} />
               <strong>{state.player.gold}</strong>
@@ -475,6 +479,7 @@ function HomePanel({
         <CommandButton action={action} command="view" targetView="equipment" label="装備を見る" detail="精錬/宝石/耐久" icon={<Shield size={18} />} disabled={isPending} />
         <CommandButton action={action} command="view" targetView="shop" label="ショップ" detail="売買/経済" icon={<ShoppingBag size={18} />} disabled={isPending} />
         <CommandButton action={action} command="rest" label="宿屋" detail="40G / 全快" icon={<Bed size={18} />} disabled={isPending} />
+        <CommandButton action={action} command="guestLogin" label="ゲストログイン" detail={state.db.connected ? "DB保存ON" : "DB保存開始"} icon={<Database size={18} />} disabled={isPending || state.db.connected} />
         <CommandButton action={action} command="claimLogin" label="ログイン" detail={state.loginBonusClaimedDay === state.day ? "受取済" : "ボーナス"} icon={<BadgeCheck size={18} />} disabled={isPending || state.loginBonusClaimedDay === state.day} />
         <CommandButton action={action} command="view" targetView="gacha" label="召喚所" detail={`天井 ${state.gachaPity}/12`} icon={<Sparkles size={18} />} disabled={isPending} />
         <CommandButton action={action} command="view" targetView="guild" label="ギルド" detail={`Lv ${state.guild.level}`} icon={<Users size={18} />} disabled={isPending} />
@@ -1108,7 +1113,23 @@ function DataPanel({
 }) {
   return (
     <div className="panel-grid">
+      <section className="db-status-card">
+        <div>
+          <div className="section-title">
+            <Database size={15} />
+            <span>DBセーブ</span>
+          </div>
+          <strong>{state.db.connected ? state.db.displayName ?? "ゲスト" : "ゲスト未ログイン"}</strong>
+          <p>{state.db.message ?? (state.db.connected ? "Server Actions経由で自動保存中。" : "ゲストログインでNeonへ保存できます。")}</p>
+        </div>
+        <div className="db-save-meta">
+          <span>{state.db.connected ? "ONLINE" : "LOCAL"}</span>
+          <small>{state.db.lastSavedAt ? formatDateTime(state.db.lastSavedAt) : `Turn ${state.turn}`}</small>
+          {state.db.saveVersion && <small>v{state.db.saveVersion}</small>}
+        </div>
+      </section>
       <div className="command-grid">
+        <CommandButton action={action} command="guestLogin" label="ゲストログイン" detail={state.db.connected ? "接続済み" : "DB保存開始"} icon={<Database size={16} />} disabled={isPending || state.db.connected} />
         <button type="button" className="command-button" onClick={onSave}>
           <span className="button-icon"><Database size={16} /></span>
           <span className="button-copy"><strong>セーブ</strong><small>{saveStatus || `Turn ${state.turn}`}</small></span>
@@ -1220,6 +1241,19 @@ function soundKind(command: string): GameState["lastAction"]["kind"] {
     return "loot";
   }
   return "town";
+}
+
+function formatDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleString("ja-JP", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 function viewSceneInfo(

@@ -108,6 +108,28 @@ button {
   color: var(--amber);
 }
 
+.db-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  max-inline-size: 150px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1;
+}
+
+.db-chip span {
+  overflow: hidden;
+  min-inline-size: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.db-chip.connected {
+  color: var(--green);
+}
+
 .resource-stack {
   display: grid;
   gap: 3px;
@@ -561,6 +583,50 @@ button {
 .notice-board {
   display: grid;
   gap: 8px;
+}
+
+.db-status-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: start;
+  padding: 10px;
+  background: #101820;
+  border: var(--pixel-border);
+}
+
+.db-status-card strong {
+  display: block;
+  margin-block: 7px 4px;
+  color: var(--white);
+  font-size: 14px;
+}
+
+.db-status-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.db-save-meta {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  min-inline-size: 78px;
+}
+
+.db-save-meta span {
+  padding: 4px 6px;
+  color: var(--green);
+  border: 1px solid currentColor;
+  font-size: 10px;
+}
+
+.db-save-meta small {
+  color: var(--muted);
+  font-size: 10px;
+  text-align: end;
 }
 
 .city-grid {

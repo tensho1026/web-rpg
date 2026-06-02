@@ -92,6 +92,10 @@ export function createInitialGameState(): GameState {
   };
 
   return {
+    db: {
+      connected: false,
+      message: "ゲストログインでDB保存できます。"
+    },
     phase: "town",
     view: "home",
     location: "炉端の街アステル",
@@ -1432,7 +1436,11 @@ function ensureBattle(state: GameState): boolean {
   return state.phase === "battle" && state.enemy.hp > 0;
 }
 
-function normalizeState(state: GameState): GameState {
+export function normalizeState(state: GameState): GameState {
+  state.db = state.db ?? {
+    connected: false,
+    message: "ゲストログインでDB保存できます。"
+  };
   state.phase = state.phase ?? "town";
   state.view = state.view ?? (state.phase === "battle" ? "adventure" : "home");
   state.location = state.location ?? "炉端の街アステル";
