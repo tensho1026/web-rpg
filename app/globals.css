@@ -61,6 +61,7 @@ button {
   flex-direction: column;
   inline-size: min(100vw, 480px);
   min-block-size: 100dvh;
+  padding-block-end: calc(62px + env(safe-area-inset-bottom));
   background: var(--paper);
   border-inline: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 20px 80px var(--shadow);
@@ -107,6 +108,17 @@ button {
   color: var(--amber);
 }
 
+.resource-stack {
+  display: grid;
+  gap: 3px;
+  justify-items: end;
+}
+
+.wallet.stamina {
+  color: var(--blue);
+  font-size: 11px;
+}
+
 .scene-panel {
   padding: 10px 12px 12px;
   background:
@@ -139,6 +151,25 @@ button {
   background:
     linear-gradient(180deg, rgba(78, 165, 217, 0.22) 0 48%, transparent 48%),
     repeating-linear-gradient(0deg, #243b30 0 9px, #1a2e25 9px 18px);
+}
+
+.compact-scene .battlefield {
+  min-block-size: 112px;
+}
+
+.compact-scene .pixel-sprite {
+  inline-size: 68px;
+  block-size: 68px;
+}
+
+.compact-scene .sprite-wrap {
+  padding-block-end: 10px;
+}
+
+.battlefield.is-town {
+  background:
+    linear-gradient(180deg, rgba(244, 211, 94, 0.12) 0 42%, transparent 42%),
+    repeating-linear-gradient(0deg, #26352d 0 9px, #1c2a24 9px 18px);
 }
 
 .battlefield::before {
@@ -235,6 +266,22 @@ button {
 
 .enemy-card .meter {
   grid-column: 1 / -1;
+}
+
+.town-summary {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.town-summary span {
+  padding: 5px;
+  color: var(--ink);
+  background: #1f2f28;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 10px;
+  text-align: center;
 }
 
 .status-strip {
@@ -339,6 +386,44 @@ button {
   border-block-end: var(--pixel-border);
 }
 
+.tab-bar.wide {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab-bar.wide::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-bar.wide .command-form {
+  flex: 0 0 68px;
+}
+
+.bottom-nav {
+  position: fixed;
+  inset-inline-start: 50%;
+  inset-block-end: 0;
+  z-index: 30;
+  inline-size: min(100vw, 480px);
+  transform: translateX(-50%);
+  border-block-start: var(--pixel-border);
+  border-block-end: 0;
+  padding-block-end: env(safe-area-inset-bottom);
+  box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.36);
+}
+
+.bottom-nav .command-form {
+  flex-basis: 64px;
+}
+
+.bottom-nav .command-button {
+  min-block-size: 56px;
+  border-block: 0;
+  box-shadow: none;
+}
+
 .tab-bar button {
   display: grid;
   gap: 2px;
@@ -365,7 +450,7 @@ button {
 
 .content-panel {
   flex: 1;
-  padding: 12px;
+  padding: 12px 12px 18px;
   background:
     linear-gradient(90deg, rgba(255, 255, 255, 0.026) 1px, transparent 1px),
     linear-gradient(180deg, rgba(255, 255, 255, 0.026) 1px, transparent 1px),
@@ -402,6 +487,28 @@ button {
   box-shadow: 0 3px 0 #071014;
   cursor: pointer;
   text-align: start;
+}
+
+.command-button.compact {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 4px;
+  min-block-size: 48px;
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.command-button.compact .button-icon {
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+.command-button.compact .button-copy strong {
+  font-size: 10px;
+}
+
+.command-button.compact .button-copy small {
+  display: none;
 }
 
 .command-button:disabled {
@@ -450,7 +557,23 @@ button {
 .recipe-section,
 .quest-list,
 .codex-list,
-.locked-recipes {
+.locked-recipes,
+.notice-board {
+  display: grid;
+  gap: 8px;
+}
+
+.city-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.choice-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.battle-tools {
   display: grid;
   gap: 8px;
 }
@@ -591,10 +714,92 @@ button {
   border-color: #9b5de5;
 }
 
+.rarity-legendary {
+  border-color: #f4d35e;
+  box-shadow: inset 0 0 0 1px rgba(244, 211, 94, 0.35);
+}
+
 .stat-board {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
+}
+
+.growth-board,
+.card-grid,
+.map-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.map-list {
+  grid-template-columns: 1fr;
+}
+
+.mini-card,
+.map-card,
+.guild-banner,
+.gacha-machine,
+.notice-board {
+  background: #101820;
+  border: var(--pixel-border);
+}
+
+.mini-card {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+}
+
+.mini-card span,
+.mini-card p,
+.map-card p,
+.guild-banner p,
+.gacha-machine p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.mini-card strong,
+.map-card strong,
+.guild-banner strong,
+.gacha-machine strong {
+  color: var(--white);
+  font-size: 13px;
+}
+
+.mini-card.done {
+  border-color: #267b55;
+}
+
+.map-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+}
+
+.guild-banner,
+.gacha-machine,
+.notice-board {
+  padding: 10px;
+}
+
+.guild-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gacha-machine {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
 }
 
 .stat-board div,
@@ -647,6 +852,10 @@ button {
   gap: 8px;
 }
 
+.gear-actions.multi {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .workshop-ranks {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -694,6 +903,15 @@ button {
   line-height: 1.2;
 }
 
+.drop-tags .muted-tag,
+.muted-tag {
+  color: #6f7a72;
+}
+
+.status-tags {
+  margin-top: 5px;
+}
+
 .quest {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -724,6 +942,71 @@ button {
   opacity: 0.66;
 }
 
+.motion-attack .hero-sprite {
+  animation: hero-strike 260ms steps(3);
+}
+
+.motion-skill .hero-sprite,
+.motion-magic .hero-sprite {
+  animation: hero-cast 360ms steps(4);
+}
+
+.motion-enemy .enemy-sprite {
+  animation: enemy-hit 280ms steps(3);
+}
+
+.motion-loot .enemy-sprite {
+  animation: loot-pop 420ms steps(5);
+}
+
+@keyframes hero-strike {
+  0% {
+    transform: translateX(-4px);
+  }
+  50% {
+    transform: translateX(20px);
+  }
+  100% {
+    transform: translateX(-4px);
+  }
+}
+
+@keyframes hero-cast {
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.7);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@keyframes enemy-hit {
+  0% {
+    transform: translateX(6px);
+  }
+  50% {
+    transform: translateX(-12px);
+  }
+  100% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes loot-pop {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.08);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 360px) {
   .top-bar h1 {
     font-size: 16px;
@@ -745,7 +1028,14 @@ button {
   }
 
   .command-grid,
-  .item-action-list {
+  .item-action-list,
+  .growth-board,
+  .card-grid,
+  .choice-row {
     grid-template-columns: 1fr;
+  }
+
+  .gear-actions.multi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

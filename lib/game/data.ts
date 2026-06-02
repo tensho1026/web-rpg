@@ -1,4 +1,13 @@
-import type { EnemyTemplate, Item, Quest, Recipe } from "@/lib/game/types";
+import type {
+  CharacterClass,
+  EnemyTemplate,
+  Item,
+  MapArea,
+  Quest,
+  Recipe,
+  Skill,
+  WarpPoint
+} from "@/lib/game/types";
 
 export const ITEMS: Item[] = [
   {
@@ -192,6 +201,81 @@ export const ITEMS: Item[] = [
     icon: "遺",
     value: 260,
     description: "この地の最深部に眠る失われた部品。"
+  },
+  {
+    id: "ruby-gem",
+    name: "紅玉ジェム",
+    category: "gem",
+    rarity: "rare",
+    icon: "宝",
+    value: 90,
+    gemStats: { atk: 5 },
+    description: "ソケットに装着すると攻撃力が上がる宝石。"
+  },
+  {
+    id: "emerald-gem",
+    name: "翠玉ジェム",
+    category: "gem",
+    rarity: "rare",
+    icon: "翠",
+    value: 90,
+    gemStats: { maxHp: 18, def: 2 },
+    description: "ソケットに装着すると耐久力が上がる宝石。"
+  },
+  {
+    id: "dragon-contract",
+    name: "竜騎契約書",
+    category: "quest",
+    rarity: "epic",
+    icon: "契",
+    value: 0,
+    description: "転職と覚醒に関わる重要なクエストアイテム。"
+  },
+  {
+    id: "wolf-cub",
+    name: "星狼の幼獣",
+    category: "pet",
+    rarity: "epic",
+    icon: "狼",
+    value: 180,
+    stats: { atk: 2, luck: 2 },
+    description: "同行ペット。戦闘報酬とレアドロップを少し支える。"
+  },
+  {
+    id: "sky-horse",
+    name: "空駆け馬",
+    category: "mount",
+    rarity: "epic",
+    icon: "馬",
+    value: 220,
+    stats: { agi: 4 },
+    description: "移動用マウント。探索効率と逃走成功率が上がる。"
+  },
+  {
+    id: "starfall-sword",
+    name: "星落ちの剣",
+    category: "weapon",
+    rarity: "legendary",
+    icon: "星",
+    value: 640,
+    slot: "weapon",
+    setId: "starfall",
+    socketable: true,
+    stats: { atk: 24, luck: 6 },
+    description: "ランダムオプション厳選の対象になるレジェンダリー武器。"
+  },
+  {
+    id: "starfall-mail",
+    name: "星落ちの鎧",
+    category: "armor",
+    rarity: "legendary",
+    icon: "輝",
+    value: 620,
+    slot: "armor",
+    setId: "starfall",
+    socketable: true,
+    stats: { maxHp: 38, def: 18 },
+    description: "星落ちセット。2部位装備で追加効果が発動する。"
   }
 ];
 
@@ -288,6 +372,33 @@ export const RECIPES: Recipe[] = [
       { itemId: "aether-dust", qty: 2 }
     ],
     output: { itemId: "ember-blade", qty: 1 }
+  },
+  {
+    id: "forge-starfall-mail",
+    name: "星落ちの鎧",
+    station: "forge",
+    icon: "鍛",
+    unlockLevel: 4,
+    description: "水晶核とレリックでレジェンダリー防具を作る。",
+    requires: [
+      { itemId: "ancient-relic", qty: 1 },
+      { itemId: "crystal-core", qty: 2 },
+      { itemId: "aether-dust", qty: 5 }
+    ],
+    output: { itemId: "starfall-mail", qty: 1 }
+  },
+  {
+    id: "alchemy-ruby",
+    name: "紅玉ジェム",
+    station: "alchemy",
+    icon: "錬",
+    unlockLevel: 2,
+    description: "火花石と水晶核から攻撃系ジェムを錬成する。",
+    requires: [
+      { itemId: "flare-stone", qty: 2 },
+      { itemId: "crystal-core", qty: 1 }
+    ],
+    output: { itemId: "ruby-gem", qty: 1 }
   }
 ];
 
@@ -388,7 +499,8 @@ export const ENEMIES: EnemyTemplate[] = [
     drops: [
       { itemId: "crystal-core", min: 1, max: 2, chance: 0.68 },
       { itemId: "aether-dust", min: 2, max: 4, chance: 0.52 },
-      { itemId: "ancient-relic", min: 1, max: 1, chance: 0.14 }
+      { itemId: "ancient-relic", min: 1, max: 1, chance: 0.14 },
+      { itemId: "starfall-sword", min: 1, max: 1, chance: 0.04 }
     ]
   }
 ];
@@ -396,22 +508,210 @@ export const ENEMIES: EnemyTemplate[] = [
 export const STARTING_QUESTS: Quest[] = [
   {
     id: "first-forge",
+    type: "main",
     title: "鍛冶場の火入れ",
     description: "鉄のかけらを集めて装備合成の準備をする。",
     progress: 0,
     target: 6,
     rewardGold: 60,
     rewardItemId: "guard-ring",
+    rewardExp: 30,
     completed: false
   },
   {
     id: "relic-trail",
+    type: "sub",
     title: "古代レリックの痕跡",
     description: "水晶核を集め、錬成炉の奥へ進む。",
     progress: 0,
     target: 3,
     rewardGold: 120,
     rewardItemId: "sage-pendant",
+    rewardExp: 75,
+    completed: false
+  },
+  {
+    id: "daily-hunt",
+    type: "daily",
+    title: "デイリー討伐",
+    description: "どの敵でも3体倒す。毎日報酬が更新される。",
+    progress: 0,
+    target: 3,
+    rewardGold: 80,
+    rewardItemId: "ruby-gem",
+    rewardExp: 45,
+    completed: false
+  },
+  {
+    id: "event-starfall",
+    type: "event",
+    title: "星落ちイベント",
+    description: "レジェンダリー装備を1個入手する。",
+    progress: 0,
+    target: 1,
+    rewardGold: 200,
+    rewardItemId: "dragon-contract",
+    rewardExp: 120,
     completed: false
   }
+];
+
+export const SKILLS: Skill[] = [
+  {
+    id: "power-slash",
+    name: "強撃",
+    kind: "active",
+    icon: "斬",
+    mpCost: 5,
+    unlockLevel: 1,
+    description: "単体に高い物理ダメージを与える。"
+  },
+  {
+    id: "firebolt",
+    name: "火炎弾",
+    kind: "magic",
+    icon: "炎",
+    mpCost: 8,
+    unlockLevel: 1,
+    description: "魔法ダメージを与え、低確率で火傷にする。"
+  },
+  {
+    id: "venom-edge",
+    name: "毒刃",
+    kind: "active",
+    icon: "毒",
+    mpCost: 6,
+    unlockLevel: 3,
+    description: "攻撃しながら毒を付与する。"
+  },
+  {
+    id: "treasure-sense",
+    name: "トレジャーセンス",
+    kind: "passive",
+    icon: "運",
+    mpCost: 0,
+    unlockLevel: 2,
+    description: "レアドロップ率を上げるパッシブ。"
+  }
+];
+
+export const CLASSES: CharacterClass[] = [
+  {
+    id: "wanderer",
+    name: "放浪者",
+    unlockLevel: 1,
+    cost: 0,
+    stats: {},
+    skillId: "power-slash"
+  },
+  {
+    id: "spellblade",
+    name: "魔法剣士",
+    unlockLevel: 3,
+    cost: 160,
+    stats: { atk: 3, maxMp: 12, luck: 1 },
+    skillId: "firebolt"
+  },
+  {
+    id: "relic-knight",
+    name: "レリックナイト",
+    unlockLevel: 5,
+    cost: 320,
+    stats: { maxHp: 24, atk: 5, def: 4 },
+    skillId: "venom-edge"
+  }
+];
+
+export const SHOP_ITEMS = [
+  { itemId: "potion", price: 32 },
+  { itemId: "ether-drop", price: 58 },
+  { itemId: "smoke-bomb", price: 24 },
+  { itemId: "flare-stone", price: 48 },
+  { itemId: "ruby-gem", price: 140 },
+  { itemId: "emerald-gem", price: 140 }
+];
+
+export const MAP_AREAS: MapArea[] = [
+  {
+    id: "field",
+    name: "街道フィールド",
+    kind: "field",
+    stamina: 3,
+    floor: 1,
+    description: "素材と低層モンスターが出る基本エリア。"
+  },
+  {
+    id: "mine",
+    name: "廃鉱ダンジョン",
+    kind: "dungeon",
+    stamina: 5,
+    floor: 2,
+    description: "鉄、革、装備ドロップを狙うハクスラ向けエリア。"
+  },
+  {
+    id: "furnace",
+    name: "古代炉深部",
+    kind: "dungeon",
+    stamina: 8,
+    floor: 4,
+    description: "レジェンダリー装備とレリックを狙う高難度エリア。"
+  }
+];
+
+export const WARP_POINTS: WarpPoint[] = [
+  {
+    id: "town",
+    name: "炉端の街アステル",
+    areaId: "town",
+    unlockFloor: 1,
+    cost: 0,
+    description: "街へ即時帰還する。店、宿屋、ギルドが使える。"
+  },
+  {
+    id: "field-camp",
+    name: "街道の野営地",
+    areaId: "field",
+    unlockFloor: 1,
+    cost: 12,
+    description: "低コストでフィールドへ移動するワープ地点。"
+  },
+  {
+    id: "mine-gate",
+    name: "廃鉱ゲート",
+    areaId: "mine",
+    unlockFloor: 2,
+    cost: 28,
+    description: "素材と装備ドロップを狙う廃鉱入口へ移動。"
+  },
+  {
+    id: "furnace-core",
+    name: "古代炉中枢",
+    areaId: "furnace",
+    unlockFloor: 4,
+    cost: 54,
+    description: "レジェンダリー狙いの高難度エリアへ移動。"
+  }
+];
+
+export const ACHIEVEMENTS = [
+  { id: "first-blood", title: "初勝利", description: "初めて敵を倒す。" },
+  { id: "crafter", title: "工房見習い", description: "合成か錬成を行う。" },
+  { id: "refiner", title: "精錬の賭け", description: "装備精錬を行う。" },
+  { id: "legend-hunter", title: "星狩り", description: "レジェンダリー装備を入手する。" },
+  { id: "guild-hand", title: "ギルド貢献者", description: "ギルドへ貢献する。" }
+];
+
+export const TITLES = [
+  { id: "rookie", name: "新米探索者", bonus: "HP +4" },
+  { id: "lucky", name: "幸運を呼ぶ者", bonus: "LUK +2" },
+  { id: "star-seeker", name: "星落ちを追う者", bonus: "ATK +2 / LUK +2" }
+];
+
+export const GACHA_POOL = [
+  { itemId: "potion", weight: 34 },
+  { itemId: "aether-dust", weight: 20 },
+  { itemId: "ruby-gem", weight: 16 },
+  { itemId: "wolf-cub", weight: 8 },
+  { itemId: "sky-horse", weight: 6 },
+  { itemId: "starfall-sword", weight: 2 }
 ];
