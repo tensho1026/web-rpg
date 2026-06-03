@@ -1,7 +1,7 @@
-import { RpgShell } from "@/app/components/rpg-shell";
-import { loadGameStateForPage } from "@/lib/db/game-store";
+import { GamePage } from "@/app/game-page";
 
-export default async function Home() {
-  const initialState = await loadGameStateForPage();
-  return <RpgShell initialState={initialState} />;
+export const dynamic = "force-dynamic";
+
+export default function Home() {
+  return <GamePage view="home" />;
 }

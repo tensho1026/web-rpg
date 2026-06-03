@@ -8,13 +8,23 @@ datasource db {
 }
 
 model GuestUser {
-  id          String      @id @default(cuid())
-  guestKey    String      @unique
-  displayName String
-  createdAt   DateTime    @default(now())
-  lastLoginAt DateTime    @updatedAt
-  saves       GameSave[]
-  events      GameEvent[]
+  id             String                @id @default(cuid())
+  guestKey       String                @unique
+  displayName    String
+  createdAt      DateTime              @default(now())
+  lastLoginAt    DateTime              @updatedAt
+  saves          GameSave[]
+  events         GameEvent[]
+  runtime        PlayerRuntime?
+  profile        PlayerProfile?
+  inventory      PlayerInventory[]
+  equipmentSlots PlayerEquipmentSlot[]
+  equipmentMeta  PlayerEquipmentMeta[]
+  skills         PlayerSkill[]
+  quests         PlayerQuest[]
+  discoveries    PlayerDiscovery[]
+  collections    PlayerCollection[]
+  storyFlags     PlayerStoryFlag[]
 }
 
 model GameSave {
@@ -48,4 +58,319 @@ model GameEvent {
   guestUser   GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
 
   @@index([guestUserId, createdAt])
+}
+
+model PlayerRuntime {
+  guestUserId          String    @id
+  phase                String
+  view                 String
+  location             String
+  floor                Int
+  day                  Int
+  turn                 Int
+  forgeRank            Float
+  alchemyRank          Float
+  battleSpeed          Int
+  autoBattle           Boolean
+  loginBonusClaimedDay Int
+  gachaPity            Int
+  guildName            String
+  guildLevel           Int
+  guildContribution    Int
+  enemy                Json
+  lastDrops            Json
+  log                  Json
+  playHistory          Json
+  lastAction           Json
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  guestUser            GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@index([updatedAt])
+}
+
+model PlayerProfile {
+  guestUserId   String    @id
+  name          String
+  classId       String
+  className     String
+  level         Int
+  exp           Int
+  expToNext     Int
+  hp            Int
+  mp            Int
+  base          Json
+  gold          Int
+  stamina       Int
+  maxStamina    Int
+  rank          Int
+  awakening     Int
+  evolution     Int
+  limitBreak    Int
+  skillPoints   Int
+  title         String
+  activePet     String?
+  activeMount   String?
+  statusEffects Json
+  passiveSkills Json
+  skillTree     Json
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  guestUser     GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@index([level])
+}
+
+model PlayerInventory {
+  guestUserId String
+  itemId      String
+  qty         Int
+  updatedAt   DateTime  @updatedAt
+  guestUser   GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@id([guestUserId, itemId])
+  @@index([itemId])
+}
+
+model PlayerEquipmentSlot {
+  guestUserId String
+  slot        String
+  itemId      String
+  updatedAt   DateTime  @updatedAt
+  guestUser   GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@id([guestUserId, slot])
+  @@index([itemId])
+}
+
+model PlayerEquipmentMeta {
+  guestUserId String
+  itemId      String
+  refinement  Int
+  durability  Int
+  meta        Json
+  updatedAt   DateTime  @updatedAt
+  guestUser   GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@id([guestUserId, itemId])
+  @@index([itemId])
+}
+
+model PlayerSkill {
+  guestUserId String
+  skillId     String
+  level       Int
+  updatedAt   DateTime  @updatedAt
+  guestUser   GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@id([guestUserId, skillId])
+  @@index([skillId])
+}
+
+model PlayerQuest {
+  guestUserId  String
+  questId      String
+  type         String
+  title        String
+  description  String
+  progress     Int
+  target       Int
+  rewardGold   Int
+  rewardItemId String
+  rewardExp    Int
+  completed    Boolean
+  updatedAt    DateTime  @updatedAt
+  guestUser    GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@id([guestUserId, questId])
+  @@index([type, completed])
+}
+
+model PlayerDiscovery {
+  guestUserId String
+  kind        String
+  refId       String
+  createdAt   DateTime  @default(now())
+  guestUser   GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@id([guestUserId, kind, refId])
+  @@index([kind, refId])
+}
+
+model PlayerCollection {
+  guestUserId String
+  kind        String
+  refId       String
+  createdAt   DateTime  @default(now())
+  guestUser   GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@id([guestUserId, kind, refId])
+  @@index([kind, refId])
+}
+
+model PlayerStoryFlag {
+  guestUserId String
+  flag        String
+  value       Boolean
+  updatedAt   DateTime  @updatedAt
+  guestUser   GuestUser @relation(fields: [guestUserId], references: [id], onDelete: Cascade)
+
+  @@id([guestUserId, flag])
+}
+
+model ItemMaster {
+  id          String   @id
+  name        String
+  category    String
+  rarity      String
+  icon        String
+  value       Int
+  description String
+  slot        String?
+  setId       String?
+  socketable  Boolean  @default(false)
+  stats       Json?
+  gemStats    Json?
+  heal        Json?
+  damage      Int?
+  raw         Json
+  updatedAt   DateTime @updatedAt
+
+  @@index([category, rarity])
+}
+
+model EnemyMaster {
+  id          String   @id
+  name        String
+  sprite      String
+  biome       String
+  level       Int
+  minFloor    Int
+  maxHp       Int
+  atk         Int
+  def         Int
+  agi         Int
+  exp         Int
+  gold        Int
+  drops       Json
+  description String
+  raw         Json
+  updatedAt   DateTime @updatedAt
+
+  @@index([minFloor, level])
+}
+
+model RecipeMaster {
+  id          String   @id
+  name        String
+  station     String
+  icon        String
+  description String
+  unlockLevel Int
+  requires    Json
+  output      Json
+  raw         Json
+  updatedAt   DateTime @updatedAt
+
+  @@index([station, unlockLevel])
+}
+
+model SkillMaster {
+  id          String   @id
+  name        String
+  kind        String
+  icon        String
+  mpCost      Int
+  unlockLevel Int
+  description String
+  raw         Json
+  updatedAt   DateTime @updatedAt
+
+  @@index([kind, unlockLevel])
+}
+
+model ClassMaster {
+  id          String   @id
+  name        String
+  unlockLevel Int
+  cost        Int
+  stats       Json
+  skillId     String
+  raw         Json
+  updatedAt   DateTime @updatedAt
+
+  @@index([unlockLevel])
+}
+
+model MapAreaMaster {
+  id          String   @id
+  name        String
+  kind        String
+  stamina     Int
+  floor       Int
+  description String
+  raw         Json
+  updatedAt   DateTime @updatedAt
+
+  @@index([kind, floor])
+}
+
+model WarpPointMaster {
+  id          String   @id
+  name        String
+  areaId      String
+  unlockFloor Int
+  cost        Int
+  description String
+  raw         Json
+  updatedAt   DateTime @updatedAt
+
+  @@index([areaId, unlockFloor])
+}
+
+model ShopItemMaster {
+  itemId    String   @id
+  price     Int
+  raw       Json
+  updatedAt DateTime @updatedAt
+}
+
+model QuestTemplateMaster {
+  id           String   @id
+  type         String
+  title        String
+  description  String
+  target       Int
+  rewardGold   Int
+  rewardItemId String
+  rewardExp    Int
+  raw          Json
+  updatedAt    DateTime @updatedAt
+
+  @@index([type])
+}
+
+model AchievementMaster {
+  id          String   @id
+  title       String
+  description String
+  raw         Json
+  updatedAt   DateTime @updatedAt
+}
+
+model TitleMaster {
+  id        String   @id
+  name      String
+  bonus     String
+  raw       Json
+  updatedAt DateTime @updatedAt
+}
+
+model GachaPoolMaster {
+  itemId    String   @id
+  weight    Int
+  raw       Json
+  updatedAt DateTime @updatedAt
+
+  @@index([weight])
 }

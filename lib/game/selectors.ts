@@ -1,13 +1,22 @@
 import { CLASSES, ITEM_BY_ID, ITEMS, RECIPES } from "@/lib/game/data";
+import type { GameCatalog } from "@/lib/game/catalog";
 import type { Item, PlayerState, Recipe, Stats } from "@/lib/game/types";
 
-export function getItem(itemId: string): Item | undefined {
-  return ITEM_BY_ID[itemId];
+export function getItem(
+  itemId: string,
+  itemById: Record<string, Item> = ITEM_BY_ID
+): Item | undefined {
+  return itemById[itemId];
 }
 
-export function getPlayerStats(player: PlayerState): Stats {
+export function getPlayerStats(
+  player: PlayerState,
+  catalog?: Pick<GameCatalog, "classes" | "itemById">
+): Stats {
   const stats: Stats = { ...player.base };
-  const currentClass = CLASSES.find((entry) => entry.id === player.classId);
+  const classes = catalog?.classes ?? CLASSES;
+  const itemById = catalog?.itemById ?? ITEM_BY_ID;
+  const currentClass = classes.find((entry) => entry.id === player.classId);
   if (currentClass?.stats) {
     applyStats(stats, currentClass.stats);
   }
@@ -16,7 +25,7 @@ export function getPlayerStats(player: PlayerState): Stats {
     if (!itemId) {
       return;
     }
-    const item = ITEM_BY_ID[itemId];
+    const item = itemById[itemId];
     if (!item?.stats) {
       return;
     }
@@ -34,7 +43,7 @@ export function getPlayerStats(player: PlayerState): Stats {
         stats[option.stat] += option.value;
       });
       meta.sockets.forEach((gemId) => {
-        const gem = ITEM_BY_ID[gemId];
+        const gem = itemById[gemId];
         if (gem?.gemStats) {
           applyStats(stats, gem.gemStats);
         }
@@ -42,16 +51,16 @@ export function getPlayerStats(player: PlayerState): Stats {
     }
   });
 
-  if (Object.values(player.equipment).filter((itemId) => ITEM_BY_ID[itemId ?? ""]?.setId === "starfall").length >= 2) {
+  if (Object.values(player.equipment).filter((itemId) => itemById[itemId ?? ""]?.setId === "starfall").length >= 2) {
     stats.atk += 6;
     stats.luck += 6;
   }
 
   if (player.activePet) {
-    applyStats(stats, ITEM_BY_ID[player.activePet]?.stats ?? {});
+    applyStats(stats, itemById[player.activePet]?.stats ?? {});
   }
   if (player.activeMount) {
-    applyStats(stats, ITEM_BY_ID[player.activeMount]?.stats ?? {});
+    applyStats(stats, itemById[player.activeMount]?.stats ?? {});
   }
   if (player.title === "lucky") {
     stats.luck += 2;
@@ -87,12 +96,18 @@ export function canCraft(player: PlayerState, recipe: Recipe): boolean {
   );
 }
 
-export function visibleRecipes(level: number): Recipe[] {
-  return RECIPES.filter((recipe) => recipe.unlockLevel <= level);
+export function visibleRecipes(
+  level: number,
+  recipes: Recipe[] = RECIPES
+): Recipe[] {
+  return recipes.filter((recipe) => recipe.unlockLevel <= level);
 }
 
-export function inventoryItems(player: PlayerState): Array<Item & { qty: number }> {
-  return ITEMS.map((item) => ({ ...item, qty: inventoryCount(player, item.id) }))
+export function inventoryItems(
+  player: PlayerState,
+  items: Item[] = ITEMS
+): Array<Item & { qty: number }> {
+  return items.map((item) => ({ ...item, qty: inventoryCount(player, item.id) }))
     .filter((item) => item.qty > 0)
     .sort((a, b) => categoryOrder(a.category) - categoryOrder(b.category));
 }

@@ -5,8 +5,7 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
-  type ReactNode
+  useState
 } from "react";
 import {
   Backpack,
@@ -36,19 +35,9 @@ import {
   Zap
 } from "lucide-react";
 import { runGameCommand } from "@/app/actions";
-import {
-  ACHIEVEMENTS,
-  CLASSES,
-  ENEMIES,
-  ITEM_BY_ID,
-  ITEMS,
-  MAP_AREAS,
-  RECIPES,
-  SHOP_ITEMS,
-  SKILLS,
-  TITLES,
-  WARP_POINTS
-} from "@/lib/game/data";
+import { PixelSprite } from "@/app/components/pixel-sprite";
+import { CommandButton } from "@/app/components/rpg-command";
+import { BottomNav } from "@/app/components/rpg-navigation";
 import {
   canCraft,
   getItem,
@@ -57,6 +46,7 @@ import {
   inventoryItems,
   visibleRecipes
 } from "@/lib/game/selectors";
+import type { GameCatalog } from "@/lib/game/catalog";
 import type {
   EnemyTemplate,
   EquipmentSlot,
@@ -68,38 +58,6 @@ import type {
   Station,
   StatusEffect
 } from "@/lib/game/types";
-
-type CommandButtonProps = {
-  action: (payload: FormData) => void;
-  command: string;
-  label: string;
-  detail?: string;
-  itemId?: string;
-  recipeId?: string;
-  skillId?: string;
-  targetView?: GameView;
-  areaId?: string;
-  value?: string;
-  disabled?: boolean;
-  icon: ReactNode;
-  compact?: boolean;
-  onCommand?: () => void;
-};
-
-const views: Array<{ id: GameView; label: string; icon: ReactNode }> = [
-  { id: "home", label: "街", icon: <Home size={16} /> },
-  { id: "adventure", label: "冒険", icon: <Compass size={16} /> },
-  { id: "character", label: "育成", icon: <Zap size={16} /> },
-  { id: "equipment", label: "装備", icon: <Shield size={16} /> },
-  { id: "inventory", label: "バッグ", icon: <Backpack size={16} /> },
-  { id: "craft", label: "工房", icon: <Hammer size={16} /> },
-  { id: "shop", label: "店", icon: <ShoppingBag size={16} /> },
-  { id: "quests", label: "依頼", icon: <Trophy size={16} /> },
-  { id: "codex", label: "図鑑", icon: <ScrollText size={16} /> },
-  { id: "guild", label: "ギルド", icon: <Users size={16} /> },
-  { id: "gacha", label: "ガチャ", icon: <Sparkles size={16} /> },
-  { id: "data", label: "保存", icon: <Database size={16} /> }
-];
 
 const stationLabels: Record<Station, string> = {
   synthesis: "合成",
@@ -120,124 +78,13 @@ const categoryLabels: Record<Item["category"], string> = {
   mount: "マウント"
 };
 
-const spritePalette: Record<string, string> = {
-  ".": "transparent",
-  A: "#101820",
-  B: "#f4d35e",
-  C: "#1f8a70",
-  D: "#44c2b8",
-  E: "#d95d39",
-  F: "#f7f0d6",
-  G: "#6b4f3f",
-  H: "#8a8f98",
-  I: "#c9d1d9",
-  J: "#7a4cff",
-  K: "#2f4858",
-  L: "#d7263d",
-  M: "#92d050",
-  N: "#3b6ea8",
-  O: "#9b5de5",
-  P: "#f15bb5",
-  Q: "#00bbf9",
-  R: "#7ddc6f",
-  S: "#f8a13f"
-};
-
-const sprites: Record<string, string[]> = {
-  hero: [
-    ".....BB.....",
-    "....BFFB....",
-    "....FAFB....",
-    "...BBABB....",
-    "..CCBCBCC...",
-    "..C.CBC.C...",
-    "....CBC.....",
-    "...GG.GG....",
-    "...G...G....",
-    "..HH...HH...",
-    ".HH.....HH.."
-  ],
-  town: [
-    "..SS....SS..",
-    ".SFFS..SFFS.",
-    ".SFFS..SFFS.",
-    ".SGGS..SGGS.",
-    "SSGGSSSSGGSS",
-    "SNNNNSSNNNNS",
-    "SNAANSSNAANS",
-    "SNNNNSSNNNNS",
-    "SSSSSSSSSSSS",
-    "..RRRRRRRR..",
-    ".RRRRRRRRRR."
-  ],
-  slime: [
-    "............",
-    "............",
-    "....DDDD....",
-    "...DQQQQD...",
-    "..DQQFFQQD..",
-    "..DQQAAQQD..",
-    "..DQQQQQQD..",
-    "...DQQQQD...",
-    "....DDDD....",
-    "...D....D...",
-    "............"
-  ],
-  bandit: [
-    ".....GG.....",
-    "....GFFG....",
-    "...GFAAFG...",
-    "..HHHGGHHH..",
-    ".H..GEEG..H.",
-    "....GEEG....",
-    "...GG..GG...",
-    "...G....G...",
-    "..HH....HH..",
-    ".HH......HH.",
-    "............"
-  ],
-  knight: [
-    ".....II.....",
-    "....IAAI....",
-    "...IIAAII...",
-    "..IIIIIIII..",
-    "..IILLLLII..",
-    ".IIIKKKKIII.",
-    "....IKKI....",
-    "...II..II...",
-    "..II....II..",
-    ".II......II.",
-    "............"
-  ],
-  mage: [
-    ".....OO.....",
-    "....OQQO....",
-    "...OFAAFQ...",
-    "..OOOJJOOO..",
-    ".O..OJJQ..O.",
-    "....OJJQ....",
-    "...OO..OO...",
-    "...O....O...",
-    "..PP....PP..",
-    ".PP......PP.",
-    "............"
-  ],
-  warden: [
-    ".....QQ.....",
-    "....QIIQ....",
-    "...QIAAIQ...",
-    "..QQQNNQQQ..",
-    ".Q..NLLN..Q.",
-    "....NLLN....",
-    "...QQNNQQ...",
-    "..QQ....QQ..",
-    ".QQ......QQ.",
-    "QQ........QQ",
-    "............"
-  ]
-};
-
-export function RpgShell({ initialState }: { initialState: GameState }) {
+export function RpgShell({
+  initialState,
+  catalog
+}: {
+  initialState: GameState;
+  catalog: GameCatalog;
+}) {
   const [state, formAction, isPending] = useActionState(
     runGameCommand,
     initialState
@@ -245,11 +92,14 @@ export function RpgShell({ initialState }: { initialState: GameState }) {
   const [saveStatus, setSaveStatus] = useState("");
   const [savedJson, setSavedJson] = useState("");
   const audioRef = useRef<AudioContext | null>(null);
-  const stats = getPlayerStats(state.player);
-  const carriedItems = useMemo(() => inventoryItems(state.player), [state]);
+  const stats = getPlayerStats(state.player, catalog);
+  const carriedItems = useMemo(
+    () => inventoryItems(state.player, catalog.items),
+    [catalog.items, state]
+  );
   const learnedRecipes = useMemo(
-    () => visibleRecipes(state.player.level),
-    [state.player.level]
+    () => visibleRecipes(state.player.level, catalog.recipes),
+    [catalog.recipes, state.player.level]
   );
   const hpPercent = percent(state.player.hp, stats.maxHp);
   const mpPercent = percent(state.player.mp, stats.maxMp);
@@ -322,7 +172,7 @@ export function RpgShell({ initialState }: { initialState: GameState }) {
           </div>
         </header>
 
-        <ScenePanel state={state} stats={stats} />
+        <ScenePanel state={state} stats={stats} catalog={catalog} />
 
         <section className="status-strip">
           <div className="status-main">
@@ -344,29 +194,29 @@ export function RpgShell({ initialState }: { initialState: GameState }) {
             <HomePanel state={state} action={formAction} isPending={isPending} />
           )}
           {state.view === "adventure" && (
-            <AdventurePanel state={state} action={formAction} isPending={isPending} />
+            <AdventurePanel state={state} action={formAction} isPending={isPending} catalog={catalog} />
           )}
           {state.view === "character" && (
-            <CharacterPanel state={state} action={formAction} isPending={isPending} />
+            <CharacterPanel state={state} action={formAction} isPending={isPending} catalog={catalog} />
           )}
           {state.view === "inventory" && (
             <InventoryPanel state={state} items={carriedItems} action={formAction} isPending={isPending} />
           )}
           {state.view === "equipment" && (
-            <EquipmentPanel state={state} items={carriedItems} action={formAction} isPending={isPending} />
+            <EquipmentPanel state={state} items={carriedItems} action={formAction} isPending={isPending} catalog={catalog} />
           )}
           {state.view === "craft" && (
-            <CraftPanel state={state} recipes={learnedRecipes} action={formAction} isPending={isPending} />
+            <CraftPanel state={state} recipes={learnedRecipes} action={formAction} isPending={isPending} catalog={catalog} />
           )}
           {state.view === "shop" && (
-            <ShopPanel state={state} items={carriedItems} action={formAction} isPending={isPending} />
+            <ShopPanel state={state} items={carriedItems} action={formAction} isPending={isPending} catalog={catalog} />
           )}
-          {state.view === "quests" && <QuestPanel state={state} />}
+          {state.view === "quests" && <QuestPanel state={state} catalog={catalog} />}
           {state.view === "codex" && (
-            <CodexPanel state={state} action={formAction} isPending={isPending} />
+            <CodexPanel state={state} action={formAction} isPending={isPending} catalog={catalog} />
           )}
           {state.view === "guild" && (
-            <GuildPanel state={state} action={formAction} isPending={isPending} />
+            <GuildPanel state={state} action={formAction} isPending={isPending} catalog={catalog} />
           )}
           {state.view === "gacha" && (
             <GachaPanel state={state} action={formAction} isPending={isPending} />
@@ -383,30 +233,28 @@ export function RpgShell({ initialState }: { initialState: GameState }) {
           )}
         </section>
 
-        <nav className="tab-bar wide bottom-nav" aria-label="街メニュー">
-          {views.map((view) => (
-            <CommandButton
-              key={view.id}
-              action={formAction}
-              command="view"
-              targetView={view.id}
-              label={view.label}
-              icon={view.icon}
-              compact
-              disabled={isPending || state.view === view.id}
-              onCommand={() => playTone(audioRef, "town")}
-            />
-          ))}
-        </nav>
+        <BottomNav
+          currentView={state.view}
+          isPending={isPending}
+          onNavigate={() => playTone(audioRef, "town")}
+        />
       </section>
     </main>
   );
 }
 
-function ScenePanel({ state, stats }: { state: GameState; stats: ReturnType<typeof getPlayerStats> }) {
+function ScenePanel({
+  state,
+  stats,
+  catalog
+}: {
+  state: GameState;
+  stats: ReturnType<typeof getPlayerStats>;
+  catalog: GameCatalog;
+}) {
   const enemyPercent = percent(state.enemy.hp, state.enemy.maxHp);
   const battle = state.phase === "battle";
-  const info = viewSceneInfo(state, stats);
+  const info = viewSceneInfo(state, stats, catalog);
   return (
     <section className={battle || state.view === "home" || state.view === "adventure" ? "scene-panel" : "scene-panel compact-scene"}>
       <div className="scene-meta">
@@ -501,16 +349,18 @@ function HomePanel({
 function AdventurePanel({
   state,
   action,
-  isPending
+  isPending,
+  catalog
 }: {
   state: GameState;
   action: (payload: FormData) => void;
   isPending: boolean;
+  catalog: GameCatalog;
 }) {
   return (
     <div className="panel-grid">
       {state.phase === "battle" ? (
-        <BattlePanel state={state} action={action} isPending={isPending} />
+        <BattlePanel state={state} action={action} isPending={isPending} catalog={catalog} />
       ) : (
         <>
           <div className="section-title">
@@ -518,7 +368,7 @@ function AdventurePanel({
             <span>マップ</span>
           </div>
           <div className="map-list">
-            {MAP_AREAS.map((area) => (
+            {catalog.mapAreas.map((area) => (
               <article key={area.id} className="map-card">
                 <div>
                   <strong>{area.name}</strong>
@@ -535,7 +385,7 @@ function AdventurePanel({
               <span>ワープ地点</span>
             </div>
             <div className="map-list">
-              {WARP_POINTS.map((warp) => (
+              {catalog.warpPoints.map((warp) => (
                 <article key={warp.id} className="map-card">
                   <div>
                     <strong>{warp.name}</strong>
@@ -556,18 +406,20 @@ function AdventurePanel({
 function BattlePanel({
   state,
   action,
-  isPending
+  isPending,
+  catalog
 }: {
   state: GameState;
   action: (payload: FormData) => void;
   isPending: boolean;
+  catalog: GameCatalog;
 }) {
-  const consumables = inventoryItems(state.player).filter(
+  const consumables = inventoryItems(state.player, catalog.items).filter(
     (item) => item.category === "consumable"
   );
-  const stats = getPlayerStats(state.player);
+  const stats = getPlayerStats(state.player, catalog);
   const disabled = isPending || state.phase !== "battle";
-  const activeSkills = SKILLS.filter((skill) => skill.kind !== "passive" && state.player.skills[skill.id]);
+  const activeSkills = catalog.skills.filter((skill) => skill.kind !== "passive" && state.player.skills[skill.id]);
 
   return (
     <div className="panel-grid">
@@ -617,13 +469,15 @@ function BattlePanel({
 function CharacterPanel({
   state,
   action,
-  isPending
+  isPending,
+  catalog
 }: {
   state: GameState;
   action: (payload: FormData) => void;
   isPending: boolean;
+  catalog: GameCatalog;
 }) {
-  const stats = getPlayerStats(state.player);
+  const stats = getPlayerStats(state.player, catalog);
   return (
     <div className="panel-grid">
       <div className="stat-board">
@@ -653,7 +507,7 @@ function CharacterPanel({
           <span>転職</span>
         </div>
         <div className="card-grid">
-          {CLASSES.map((job) => (
+          {catalog.classes.map((job) => (
             <article key={job.id} className="mini-card">
               <strong>{job.name}</strong>
               <p>Lv {job.unlockLevel} / {job.cost}G / {job.skillId}</p>
@@ -668,7 +522,7 @@ function CharacterPanel({
           <span>スキルツリー</span>
         </div>
         <div className="inventory-list compact">
-          {SKILLS.map((skill) => (
+          {catalog.skills.map((skill) => (
             <article key={skill.id} className="item-row">
               <div className="item-icon">{skill.icon}</div>
               <div className="item-copy">
@@ -733,19 +587,21 @@ function EquipmentPanel({
   state,
   items,
   action,
-  isPending
+  isPending,
+  catalog
 }: {
   state: GameState;
   items: Array<Item & { qty: number }>;
   action: (payload: FormData) => void;
   isPending: boolean;
+  catalog: GameCatalog;
 }) {
   const equipment = items.filter((item) => item.slot);
   return (
     <div className="panel-grid">
       <div className="slot-grid">
         {(["weapon", "armor", "accessory"] as const).map((slot) => {
-          const item = getItem(state.player.equipment[slot] ?? "");
+          const item = getItem(state.player.equipment[slot] ?? "", catalog.itemById);
           const meta = item ? state.player.equipmentMeta[item.id] : undefined;
           return (
             <article key={slot} className="slot-card">
@@ -791,12 +647,14 @@ function CraftPanel({
   state,
   recipes,
   action,
-  isPending
+  isPending,
+  catalog
 }: {
   state: GameState;
   recipes: Recipe[];
   action: (payload: FormData) => void;
   isPending: boolean;
+  catalog: GameCatalog;
 }) {
   return (
     <div className="panel-grid">
@@ -820,7 +678,7 @@ function CraftPanel({
           </div>
           <div className="recipe-list">
             {recipes.filter((recipe) => recipe.station === station).map((recipe) => {
-              const output = getItem(recipe.output.itemId);
+              const output = getItem(recipe.output.itemId, catalog.itemById);
               const ready = canCraft(state.player, recipe);
               return (
                 <article key={recipe.id} className="recipe-card">
@@ -830,7 +688,7 @@ function CraftPanel({
                     <p>{recipe.description}</p>
                     <div className="materials">
                       {recipe.requires.map((stack) => (
-                        <span key={stack.itemId}>{getItem(stack.itemId)?.name ?? stack.itemId} {inventoryCount(state.player, stack.itemId)}/{stack.qty}</span>
+                        <span key={stack.itemId}>{getItem(stack.itemId, catalog.itemById)?.name ?? stack.itemId} {inventoryCount(state.player, stack.itemId)}/{stack.qty}</span>
                       ))}
                     </div>
                   </div>
@@ -845,7 +703,7 @@ function CraftPanel({
           </div>
         </section>
       ))}
-      <LockedRecipes level={state.player.level} />
+      <LockedRecipes level={state.player.level} catalog={catalog} />
     </div>
   );
 }
@@ -854,12 +712,14 @@ function ShopPanel({
   state,
   items,
   action,
-  isPending
+  isPending,
+  catalog
 }: {
   state: GameState;
   items: Array<Item & { qty: number }>;
   action: (payload: FormData) => void;
   isPending: boolean;
+  catalog: GameCatalog;
 }) {
   return (
     <div className="panel-grid">
@@ -868,8 +728,11 @@ function ShopPanel({
         <span>ショップ</span>
       </div>
       <div className="inventory-list">
-        {SHOP_ITEMS.map((shopItem) => {
-          const item = ITEM_BY_ID[shopItem.itemId];
+        {catalog.shopItems.map((shopItem) => {
+          const item = catalog.itemById[shopItem.itemId];
+          if (!item) {
+            return null;
+          }
           return (
             <article key={shopItem.itemId} className={`item-row rarity-${item.rarity}`}>
               <div className="item-icon">{item.icon}</div>
@@ -929,7 +792,13 @@ function ItemList({
   );
 }
 
-function QuestPanel({ state }: { state: GameState }) {
+function QuestPanel({
+  state,
+  catalog
+}: {
+  state: GameState;
+  catalog: GameCatalog;
+}) {
   return (
     <div className="panel-grid">
       {(["main", "sub", "daily", "event"] as Quest["type"][]).map((type) => (
@@ -943,7 +812,7 @@ function QuestPanel({ state }: { state: GameState }) {
               <div>
                 <strong>{quest.title}</strong>
                 <p>{quest.description}</p>
-                <p>{quest.rewardGold}G / {quest.rewardExp}EXP / {ITEM_BY_ID[quest.rewardItemId]?.name}</p>
+                <p>{quest.rewardGold}G / {quest.rewardExp}EXP / {catalog.itemById[quest.rewardItemId]?.name}</p>
               </div>
               <span>{quest.completed ? "DONE" : `${quest.progress}/${quest.target}`}</span>
             </article>
@@ -957,11 +826,13 @@ function QuestPanel({ state }: { state: GameState }) {
 function CodexPanel({
   state,
   action,
-  isPending
+  isPending,
+  catalog
 }: {
   state: GameState;
   action: (payload: FormData) => void;
   isPending: boolean;
+  catalog: GameCatalog;
 }) {
   return (
     <div className="panel-grid">
@@ -970,8 +841,8 @@ function CodexPanel({
           <Gem size={15} />
           <span>モンスター図鑑</span>
         </div>
-        {ENEMIES.map((enemy) => (
-          <EnemyCodex key={enemy.id} enemy={enemy} discovered={state.discoveredEnemies.includes(enemy.id)} />
+        {catalog.enemies.map((enemy) => (
+          <EnemyCodex key={enemy.id} enemy={enemy} discovered={state.discoveredEnemies.includes(enemy.id)} catalog={catalog} />
         ))}
       </section>
       <section className="codex-list">
@@ -980,7 +851,7 @@ function CodexPanel({
           <span>アイテム図鑑</span>
         </div>
         <div className="drop-tags">
-          {ITEMS.map((item) => (
+          {catalog.items.map((item) => (
             <span key={item.id} className={state.discoveredItems.includes(item.id) ? "" : "muted-tag"}>{state.discoveredItems.includes(item.id) ? item.name : "未発見"}</span>
           ))}
         </div>
@@ -991,7 +862,7 @@ function CodexPanel({
           <span>実績と称号</span>
         </div>
         <div className="card-grid">
-          {ACHIEVEMENTS.map((achievement) => (
+          {catalog.achievements.map((achievement) => (
             <article key={achievement.id} className={state.achievements.includes(achievement.id) ? "mini-card done" : "mini-card"}>
               <strong>{achievement.title}</strong>
               <p>{achievement.description}</p>
@@ -999,12 +870,12 @@ function CodexPanel({
           ))}
         </div>
         <div className="drop-tags">
-          {TITLES.map((title) => (
+          {catalog.titles.map((title) => (
             <span key={title.id}>{state.titles.includes(title.id) ? `${title.name}: ${title.bonus}` : "未獲得"}</span>
           ))}
         </div>
         <div className="choice-row">
-          {TITLES.filter((title) => state.titles.includes(title.id)).map((title) => (
+          {catalog.titles.filter((title) => state.titles.includes(title.id)).map((title) => (
             <CommandButton
               key={title.id}
               action={action}
@@ -1022,7 +893,15 @@ function CodexPanel({
   );
 }
 
-function EnemyCodex({ enemy, discovered }: { enemy: EnemyTemplate; discovered: boolean }) {
+function EnemyCodex({
+  enemy,
+  discovered,
+  catalog
+}: {
+  enemy: EnemyTemplate;
+  discovered: boolean;
+  catalog: GameCatalog;
+}) {
   return (
     <article className={discovered ? "enemy-codex" : "enemy-codex hidden-entry"}>
       <PixelSprite spriteId={enemy.sprite} label={enemy.name} mini />
@@ -1032,7 +911,7 @@ function EnemyCodex({ enemy, discovered }: { enemy: EnemyTemplate; discovered: b
         {discovered && (
           <div className="drop-tags">
             {enemy.drops.map((drop) => (
-              <span key={drop.itemId}>{ITEM_BY_ID[drop.itemId]?.name}</span>
+              <span key={drop.itemId}>{catalog.itemById[drop.itemId]?.name}</span>
             ))}
           </div>
         )}
@@ -1044,11 +923,13 @@ function EnemyCodex({ enemy, discovered }: { enemy: EnemyTemplate; discovered: b
 function GuildPanel({
   state,
   action,
-  isPending
+  isPending,
+  catalog
 }: {
   state: GameState;
   action: (payload: FormData) => void;
   isPending: boolean;
+  catalog: GameCatalog;
 }) {
   return (
     <div className="panel-grid">
@@ -1061,8 +942,8 @@ function GuildPanel({
       </div>
       <div className="command-grid">
         <CommandButton action={action} command="guildDonate" label="寄付" detail="60G" icon={<Coins size={18} />} disabled={isPending || state.player.gold < 60} />
-        <CommandButton action={action} command="trainPet" label="ペット訓練" detail={state.player.activePet ? ITEM_BY_ID[state.player.activePet]?.name : "未所持"} icon={<Heart size={18} />} disabled={isPending || !state.player.activePet} />
-        <CommandButton action={action} command="trainMount" label="マウント訓練" detail={state.player.activeMount ? ITEM_BY_ID[state.player.activeMount]?.name : "未所持"} icon={<Footprints size={18} />} disabled={isPending || !state.player.activeMount} />
+        <CommandButton action={action} command="trainPet" label="ペット訓練" detail={state.player.activePet ? catalog.itemById[state.player.activePet]?.name : "未所持"} icon={<Heart size={18} />} disabled={isPending || !state.player.activePet} />
+        <CommandButton action={action} command="trainMount" label="マウント訓練" detail={state.player.activeMount ? catalog.itemById[state.player.activeMount]?.name : "未所持"} icon={<Footprints size={18} />} disabled={isPending || !state.player.activeMount} />
         <CommandButton action={action} command="view" targetView="quests" label="ミッション" detail="デイリー/イベント" icon={<Trophy size={18} />} disabled={isPending} />
       </div>
     </div>
@@ -1158,8 +1039,14 @@ function DataPanel({
   );
 }
 
-function LockedRecipes({ level }: { level: number }) {
-  const locked = RECIPES.filter((recipe) => recipe.unlockLevel > level);
+function LockedRecipes({
+  level,
+  catalog
+}: {
+  level: number;
+  catalog: GameCatalog;
+}) {
+  const locked = catalog.recipes.filter((recipe) => recipe.unlockLevel > level);
   if (locked.length === 0) {
     return null;
   }
@@ -1178,71 +1065,6 @@ function LockedRecipes({ level }: { level: number }) {
   );
 }
 
-function CommandButton({
-  action,
-  command,
-  label,
-  detail,
-  itemId,
-  recipeId,
-  skillId,
-  targetView,
-  areaId,
-  value,
-  disabled,
-  icon,
-  compact,
-  onCommand
-}: CommandButtonProps) {
-  return (
-    <form action={action} className="command-form">
-      <input type="hidden" name="command" value={command} />
-      {itemId && <input type="hidden" name="itemId" value={itemId} />}
-      {recipeId && <input type="hidden" name="recipeId" value={recipeId} />}
-      {skillId && <input type="hidden" name="skillId" value={skillId} />}
-      {targetView && <input type="hidden" name="targetView" value={targetView} />}
-      {areaId && <input type="hidden" name="areaId" value={areaId} />}
-      {value && <input type="hidden" name="value" value={value} />}
-      <button
-        type="submit"
-        className={compact ? "command-button compact" : "command-button"}
-        disabled={disabled}
-        onClick={() => {
-          window.dispatchEvent(
-            new CustomEvent("rpg-command-sound", { detail: soundKind(command) })
-          );
-          onCommand?.();
-        }}
-      >
-        <span className="button-icon">{icon}</span>
-        <span className="button-copy">
-          <strong>{label}</strong>
-          {detail && <small>{detail}</small>}
-        </span>
-      </button>
-    </form>
-  );
-}
-
-function soundKind(command: string): GameState["lastAction"]["kind"] {
-  if (command === "attack" || command === "autoBattle") {
-    return "attack";
-  }
-  if (command === "skill") {
-    return "skill";
-  }
-  if (command === "magic") {
-    return "magic";
-  }
-  if (command === "item") {
-    return "item";
-  }
-  if (command === "gacha" || command === "craft" || command === "alchemy" || command === "reroll") {
-    return "loot";
-  }
-  return "town";
-}
-
 function formatDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -1258,7 +1080,8 @@ function formatDateTime(value: string): string {
 
 function viewSceneInfo(
   state: GameState,
-  stats: ReturnType<typeof getPlayerStats>
+  stats: ReturnType<typeof getPlayerStats>,
+  catalog: GameCatalog
 ): {
   title: string;
   subtitle: string;
@@ -1303,28 +1126,28 @@ function viewSceneInfo(
       title: "バッグ管理",
       subtitle: "消費アイテム / 素材 / クエスト品",
       badge: `${itemCount}個`,
-      metrics: [`素材 ${inventoryCategoryCount(state, "material")}`, `消費 ${inventoryCategoryCount(state, "consumable")}`, `宝石 ${inventoryCategoryCount(state, "gem")}`],
+      metrics: [`素材 ${inventoryCategoryCount(state, "material", catalog)}`, `消費 ${inventoryCategoryCount(state, "consumable", catalog)}`, `宝石 ${inventoryCategoryCount(state, "gem", catalog)}`],
       spriteId: "town"
     },
     equipment: {
       title: "装備工房",
       subtitle: "精錬 / 厳選 / 宝石 / 耐久",
-      badge: setBonusActive(state) ? "SET" : "GEAR",
-      metrics: [`武器 ${gearName(state, "weapon")}`, `防具 ${gearName(state, "armor")}`, `飾 ${gearName(state, "accessory")}`],
+      badge: setBonusActive(state, catalog) ? "SET" : "GEAR",
+      metrics: [`武器 ${gearName(state, "weapon", catalog)}`, `防具 ${gearName(state, "armor", catalog)}`, `飾 ${gearName(state, "accessory", catalog)}`],
       spriteId: "hero"
     },
     craft: {
       title: "合成と錬成",
       subtitle: "素材から装備と道具を作成",
       badge: `鍛 ${state.forgeRank.toFixed(1)}`,
-      metrics: [`錬 ${state.alchemyRank.toFixed(1)}`, `レシピ ${visibleRecipes(state.player.level).length}`, `素材 ${inventoryCategoryCount(state, "material")}`],
+      metrics: [`錬 ${state.alchemyRank.toFixed(1)}`, `レシピ ${visibleRecipes(state.player.level, catalog.recipes).length}`, `素材 ${inventoryCategoryCount(state, "material", catalog)}`],
       spriteId: "town"
     },
     shop: {
       title: "ショップ",
       subtitle: "売買と強化費用の準備",
       badge: `${state.player.gold}G`,
-      metrics: [`商品 ${SHOP_ITEMS.length}`, `所持 ${itemCount}`, `宿 40G`],
+      metrics: [`商品 ${catalog.shopItems.length}`, `所持 ${itemCount}`, `宿 40G`],
       spriteId: "town"
     },
     quests: {
@@ -1338,7 +1161,7 @@ function viewSceneInfo(
       title: "収集図鑑",
       subtitle: "モンスター / アイテム / 実績 / 称号",
       badge: `${state.achievements.length}実績`,
-      metrics: [`敵 ${state.discoveredEnemies.length}/${ENEMIES.length}`, `品 ${state.discoveredItems.length}/${ITEMS.length}`, `称号 ${state.titles.length}`],
+      metrics: [`敵 ${state.discoveredEnemies.length}/${catalog.enemies.length}`, `品 ${state.discoveredItems.length}/${catalog.items.length}`, `称号 ${state.titles.length}`],
       spriteId: "town"
     },
     guild: {
@@ -1376,23 +1199,24 @@ function areaKindLabel(kind: "field" | "dungeon" | "town"): string {
 
 function inventoryCategoryCount(
   state: GameState,
-  category: Item["category"]
+  category: Item["category"],
+  catalog: GameCatalog
 ): number {
   return Object.entries(state.player.inventory).reduce((sum, [itemId, qty]) => {
-    return ITEM_BY_ID[itemId]?.category === category ? sum + qty : sum;
+    return catalog.itemById[itemId]?.category === category ? sum + qty : sum;
   }, 0);
 }
 
-function gearName(state: GameState, slot: EquipmentSlot): string {
+function gearName(state: GameState, slot: EquipmentSlot, catalog: GameCatalog): string {
   const itemId = state.player.equipment[slot];
-  const item = itemId ? ITEM_BY_ID[itemId] : undefined;
+  const item = itemId ? catalog.itemById[itemId] : undefined;
   return item?.name ?? "未装備";
 }
 
-function setBonusActive(state: GameState): boolean {
+function setBonusActive(state: GameState, catalog: GameCatalog): boolean {
   return (
     Object.values(state.player.equipment).filter(
-      (itemId) => ITEM_BY_ID[itemId ?? ""]?.setId === "starfall"
+      (itemId) => catalog.itemById[itemId ?? ""]?.setId === "starfall"
     ).length >= 2
   );
 }
@@ -1425,25 +1249,6 @@ function Meter({
       <div className="meter-track">
         <span style={{ inlineSize: `${percentValue}%` }} />
       </div>
-    </div>
-  );
-}
-
-function PixelSprite({
-  spriteId,
-  label,
-  mini = false
-}: {
-  spriteId: string;
-  label: string;
-  mini?: boolean;
-}) {
-  const rows = sprites[spriteId] ?? sprites.slime;
-  return (
-    <div className={mini ? "pixel-sprite mini" : "pixel-sprite"} role="img" aria-label={label} style={{ gridTemplateColumns: `repeat(${rows[0].length}, 1fr)` }}>
-      {rows.join("").split("").map((pixel, index) => (
-        <span key={`${pixel}-${index}`} style={{ background: spritePalette[pixel] ?? "transparent" }} />
-      ))}
     </div>
   );
 }

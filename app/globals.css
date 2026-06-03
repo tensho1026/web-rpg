@@ -423,6 +423,10 @@ button {
   flex: 0 0 68px;
 }
 
+.tab-bar.wide .nav-link {
+  flex: 0 0 64px;
+}
+
 .bottom-nav {
   position: fixed;
   inset-inline-start: 50%;
@@ -444,6 +448,44 @@ button {
   min-block-size: 56px;
   border-block: 0;
   box-shadow: none;
+}
+
+.bottom-nav .nav-link {
+  display: grid;
+  gap: 4px;
+  place-items: center;
+  min-block-size: 56px;
+  padding: 6px 4px;
+  color: var(--muted);
+  background: transparent;
+  border-inline-end: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+  text-decoration: none;
+}
+
+.bottom-nav .nav-link:last-child {
+  border-inline-end: 0;
+}
+
+.bottom-nav .nav-link .button-icon {
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+.bottom-nav .nav-link .button-copy strong {
+  color: inherit;
+  font-size: 10px;
+}
+
+.bottom-nav .nav-link.active {
+  color: var(--amber);
+  background: #1f2f28;
+  box-shadow: inset 0 -3px 0 var(--amber);
+  pointer-events: none;
+}
+
+.bottom-nav .nav-link[aria-disabled="true"] {
+  cursor: not-allowed;
 }
 
 .tab-bar button {
